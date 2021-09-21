@@ -13,7 +13,7 @@ import {
 	IDataObject,
 } from 'n8n-workflow';
 
-import { IContactUpdate } from './ContactInterface';
+import {IContactUpdate, IFilterRules, ISearchConditions} from './ContactInterface';
 
 export async function agileCrmApiRequest(this: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
 	method: string, endpoint: string, body: any = {}, query: IDataObject = {}, uri?: string, sendAsForm?: boolean): Promise<any> { // tslint:disable-line:no-any
@@ -75,18 +75,18 @@ export async function agileCrmApiRequestUpdate(this: IHookFunctions | IExecuteFu
 
 	try {
 		// Due to API, we must update each property separately. For user it looks like one seamless update
-		// if (payload.properties) {
-		// 	options.body.properties = payload.properties;
-		// 	options.uri = baseUri + 'api/contacts/edit-properties';
-		// 	lastSuccesfulUpdateReturn = await this.helpers.request!(options);
-		//
-		// 	// Iterate trough properties and show them as individial updates instead of only vague "properties"
-		// 	payload.properties?.map((property: any) => {
-		// 		successfulUpdates.push(`${property.name}`);
-		// 	});
-		//
-		// 	delete options.body.properties;
-		// }
+		if (payload.properties) {
+			options.body.properties = payload.properties;
+			options.uri = baseUri + 'api/contacts/edit-properties';
+			lastSuccesfulUpdateReturn = await this.helpers.request!(options);
+
+			// Iterate trough properties and show them as individial updates instead of only vague "properties"
+			payload.properties?.map((property: any) => {
+				successfulUpdates.push(`${property.name}`);
+			});
+
+			delete options.body.properties;
+		}
 		if (payload.lead_score) {
 			options.body.lead_score = payload.lead_score;
 			options.uri = baseUri + 'api/contacts/edit/lead-score';
@@ -133,4 +133,22 @@ export function validateJSON(json: string | undefined): any { // tslint:disable-
 		result = undefined;
 	}
 	return result;
+}
+
+export function getRules(conditions: IDataObject): any { // tslint:disable-line:no-any
+	const rules = [];
+
+	for (const key in conditions) {
+		if (conditions.hasOwnProperty(key)) {
+			const searchConditions: ISearchConditions = conditions[key] as ISearchConditions;
+			const rule: IFilterRules = {
+				LHS: searchConditions.filterType,  // filter type
+				CONDITION: searchConditions.searchOperation, // search operation
+				RHS: searchConditions.value1 as string, // search value
+			};
+		rules.push(rule);
+		}
+	}
+
+	return rules;
 }
