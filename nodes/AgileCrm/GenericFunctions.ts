@@ -69,7 +69,7 @@ export async function agileCrmApiRequestUpdate(this: IHookFunctions | IExecuteFu
 		json: true,
 	};
 
-	const successfulUpdates = [];
+	const successfulUpdates: string[] = [];
 	let lastSuccesfulUpdateReturn: any; // tslint:disable-line:no-any
 	const payload: IContactUpdate = body;
 
@@ -80,10 +80,11 @@ export async function agileCrmApiRequestUpdate(this: IHookFunctions | IExecuteFu
 			options.uri = baseUri + 'api/contacts/edit-properties';
 			lastSuccesfulUpdateReturn = await this.helpers.request!(options);
 
-			// // Iterate trough properties and show them as individial updates instead of only vague "properties"
-			// payload.properties?.map((property: any) => {
-			// 	successfulUpdates.push(`${property.name}`);
-			// });
+			// Iterate trough properties and show them as individial updates instead of only vague "properties"
+			// tslint:disable-next-line:no-any
+			payload.properties.map((property: any) => {
+				successfulUpdates.push(`${property.name}`);
+			});
 
 			delete options.body.properties;
 		}
@@ -101,9 +102,10 @@ export async function agileCrmApiRequestUpdate(this: IHookFunctions | IExecuteFu
 			options.uri = baseUri + 'api/contacts/edit/tags';
 			lastSuccesfulUpdateReturn = await this.helpers.request!(options);
 
-			// payload.tags?.map((tag: string) => {
-			// 	successfulUpdates.push(`(Tag) ${tag}`);
-			// });
+			// @ts-ignore
+			payload.tags.map((tag: string) => {
+				successfulUpdates.push(`(Tag) ${tag}`);
+			});
 
 			delete options.body.tags;
 		}
